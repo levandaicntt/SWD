@@ -1,0 +1,80 @@
+@startuml
+title Smart Home Control System
+
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultFontName Arial
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FFFFFF
+skinparam class {
+  BackgroundColor #F9FAFB
+  BorderColor #94A3B8
+}
+skinparam interface {
+  BackgroundColor #EEF2FF
+  BorderColor #6366F1
+}
+skinparam stereotype {
+  C BackgroundColor #DCFCE7
+  I BackgroundColor #E0E7FF
+  A BackgroundColor #FFE4E6
+}
+
+left to right direction
+
+' ==== OBSERVER side ====
+interface Observer <<I>> {
+  +update(status: String)
+}
+
+interface Subject <<I>> {
+  +attach(o: Observer)
+  +detach(o: Observer)
+  +notifyObservers()
+}
+
+abstract class Device <<A>> {
+  -observers: List<Observer>
+  +turnOn()
+  +turnOff()
+  +getStatus(): String
+}
+
+class Light <<C>>
+class Thermostat <<C>>
+class Camera <<C>>
+
+class Dashboard <<C>>
+
+' relationships (Observer pattern)
+Subject <|.. Device
+Observer <|- Dashboard
+Dashboard ..> Device : observes
+Device <|-- Light
+Device <|-- Thermostat
+Device <|-- Camera
+
+' ==== ABSTRACT FACTORY side ====
+interface DeviceFactory <<I>> {
+  +createLight(name:String): Device
+  +createThermostat(name:String): Device
+  +createCamera(name:String): Device
+}
+
+class PhilipsFactory <<C>>
+class XiaomiFactory  <<C>>
+
+DeviceFactory <|.. PhilipsFactory
+DeviceFactory <|.. XiaomiFactory
+
+' ==== SINGLETON HUB ====
+class SmartHomeHub <<C>> {
+  -static instance: SmartHomeHub
+  +getInstance(): SmartHomeHub
+  +registerFactory(f: DeviceFactory)
+  +createDevice(type, brand): Device
+}
+
+SmartHomeHub --> DeviceFactory : uses
+
+@enduml

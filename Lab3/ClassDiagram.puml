@@ -23,28 +23,50 @@ skinparam stereotype {
 left to right direction
 
 ' ==== OBSERVER side ====
-interface Observer <<I>> {
+interface Observer {
   +update(status: String)
 }
 
-interface Subject <<I>> {
+interface Subject {
   +attach(o: Observer)
   +detach(o: Observer)
   +notifyObservers()
 }
 
-abstract class Device <<A>> {
+abstract class Device {
+  #name: String
+  -on: boolean
   -observers: List<Observer>
-  +turnOn()
-  +turnOff()
+  +turnOn(): void
+  +turnOff(): void
   +getStatus(): String
+  +attach(o: Observer): void
+  +detach(o: Observer): void
+  +notifyObservers(): void
+  #setStatus(s: String): void
+  #notifyObserversWith(msg: String): void
 }
 
-class Light <<C>>
-class Thermostat <<C>>
-class Camera <<C>>
+class Light {
+  +Light(name: String)
+}
 
-class Dashboard <<C>>
+class Thermostat {
+  -temp: int
+  +Thermostat(name: String)
+  +setTemperature(t: int): void
+}
+
+class Camera {
+  +Camera(name: String)
+  +startRecording(): void
+}
+
+class Dashboard {
+  -name: String
+  +Dashboard(name: String)
+  +update(status: String): void
+}
 
 ' relationships (Observer pattern)
 Subject <|.. Device
@@ -55,26 +77,36 @@ Device <|-- Thermostat
 Device <|-- Camera
 
 ' ==== ABSTRACT FACTORY side ====
-interface DeviceFactory <<I>> {
-  +createLight(name:String): Device
-  +createThermostat(name:String): Device
-  +createCamera(name:String): Device
+interface DeviceFactory {
+  +createLight(name: String): Device
+  +createThermostat(name: String): Device
+  +createCamera(name: String): Device
 }
 
-class PhilipsFactory <<C>>
-class XiaomiFactory  <<C>>
+class PhilipsFactory {
+  +createLight(name: String): Device
+  +createThermostat(name: String): Device
+  +createCamera(name: String): Device
+}
+
+class XiaomiFactory {
+  +createLight(name: String): Device
+  +createThermostat(name: String): Device
+  +createCamera(name: String): Device
+}
 
 DeviceFactory <|.. PhilipsFactory
 DeviceFactory <|.. XiaomiFactory
 
 ' ==== SINGLETON HUB ====
-class SmartHomeHub <<C>> {
+class SmartHomeHub {
   -static instance: SmartHomeHub
+  -factories: Map<String, DeviceFactory>
   +getInstance(): SmartHomeHub
-  +registerFactory(f: DeviceFactory)
-  +createDevice(type, brand): Device
+  +registerFactory(brand: String, f: DeviceFactory): void
+  +createDevice(type: String, brand: String, name: String): Device
 }
 
 SmartHomeHub --> DeviceFactory : uses
-
+SmartHomeHub ..> Device : «create»
 @enduml

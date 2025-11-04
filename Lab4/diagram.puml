@@ -1,0 +1,63 @@
+@startuml
+title Online News Distribution Platform
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+' ===== Interfaces (Observer pattern) =====
+interface Observer {
+  +update(news: News)
+}
+
+interface Subject {
+  +attach(o: Observer)
+  +detach(o: Observer)
+  +notifyObservers()
+}
+
+class Subscriber
+Subscriber ..|> Observer
+
+' ===== News hierarchy =====
+abstract class News {
+  +title   : String
+  +content : String
+  +display()
+}
+class PoliticsNews
+class SportsNews
+class TechNews
+
+PoliticsNews --|> News
+SportsNews   --|> News
+TechNews     --|> News
+
+' ===== Agencies (Factory Method creators) =====
+abstract class NewsAgency {
+  +publishNews(type: String)
+  +createNews(type: String) : News
+}
+NewsAgency ..|> Subject
+
+class CNNAgency
+class BBCAgency
+CNNAgency --|> NewsAgency
+BBCAgency --|> NewsAgency
+
+' ===== Adapter for third-party JSON feed =====
+class JSONNewsFeed {
+  +fetchJSONNews()
+}
+
+class JSONNewsAdapter {
+  +feed : JSONNewsFeed
+  +createNews(type) : News
+  +publishNews(type)
+}
+JSONNewsAdapter --|> NewsAgency
+JSONNewsAdapter --> JSONNewsFeed : feed
+
+' ===== Collaborations =====
+Subscriber --> NewsAgency : observes
+
+@enduml

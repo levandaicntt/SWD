@@ -1,0 +1,47 @@
+@startuml
+skinparam style strictuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "Student Management System" {
+  [Web UI] <<UI>>
+
+  package "Business Services" {
+    [Student Service] <<Service>>
+    [Course Service]  <<Service>>
+    [Grade Service]   <<Service>>
+    [Notification Service] <<Service>>
+  }
+
+  package "Data Access" {
+    [Student Repository]    <<Repository>>
+    [Course Repository]     <<Repository>>
+    [Enrollment Repository] <<Repository>>
+    [Grade Repository]      <<Repository>>
+  }
+
+  database "PostgreSQL DB" as DB
+  component "Message Broker\n(RabbitMQ/Kafka)" as MQ <<Queue>>
+}
+
+[Web UI] --> [Student Service]
+[Web UI] --> [Course Service]
+[Web UI] --> [Grade Service]
+
+[Student Service] --> [Student Repository]
+[Course Service]  --> [Course Repository]
+[Course Service]  --> [Enrollment Repository]
+[Grade Service]   --> [Grade Repository]
+
+[Student Repository]    --> DB
+[Course Repository]     --> DB
+[Enrollment Repository] --> DB
+[Grade Repository]      --> DB
+
+[Course Service] ..> [Student Service] : kiểm tra SV tồn tại
+[Grade Service]  ..> [Course Service]  : xác thực môn/đăng ký
+
+[Course Service] -[#orange]-> MQ : publish EnrollmentCreated
+[Grade Service]  -[#orange]-> MQ : publish GradeUpdated
+MQ -[#orange]-> [Notification Service] : subscribe events
+@enduml

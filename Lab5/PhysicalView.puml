@@ -1,0 +1,38 @@
+@startuml
+skinparam style strictuml
+skinparam shadowing false
+
+node "Client" as client {
+  artifact "Browser" as browser
+}
+
+node "Edge / Reverse Proxy" as edge {
+  artifact "Nginx" as nginx
+}
+
+node "Application Tier" as app {
+  artifact "SMS App\n(Controllers + Services)" as sms
+  artifact "Notification Handler" as notif
+}
+
+node "Integration" as integ {
+  artifact "Message Broker\n(RabbitMQ/Kafka)" as mq <<Queue>>
+  artifact "Email/SMS Gateway" as gw
+}
+
+node "Data Layer" as data {
+  database "PostgreSQL" as pg
+  node "Cache" as cache {
+    artifact "Redis" as redis
+  }
+}
+
+browser -[#blue]-> nginx : HTTPS 443
+nginx  -[#blue]-> sms   : HTTP/HTTPS
+sms    -[#green]-> pg   : JDBC 5432
+sms    -[#green]-> redis: TCP 6379 (optional)
+
+sms   -[#orange]-> mq : publish events
+notif -[#orange]-> mq : subscribe
+notif -[#purple]-> gw : send email/SMS
+@enduml

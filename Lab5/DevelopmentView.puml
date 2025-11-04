@@ -1,0 +1,75 @@
+@startuml
+skinparam style strictuml
+skinparam packageStyle rectangle
+skinparam shadowing false
+left to right direction
+hide methods
+hide stereotypes
+hide circle
+
+package "UI" as ui {
+  class StudentController
+  class CourseController
+  class GradeController
+}
+
+package "Services" as svc {
+  package "Student" as svc_student {
+    interface StudentService
+  }
+  package "Course" as svc_course {
+    interface CourseService
+  }
+  package "Grade" as svc_grade {
+    interface GradeService
+  }
+  package "Notification" as svc_notif {
+    interface NotificationService
+  }
+}
+
+package "Repository" as repo {
+  interface StudentRepository
+  interface CourseRepository
+  interface EnrollmentRepository
+  interface GradeRepository
+}
+
+package "Domain" as dom {
+  class Student
+  class Course
+  class Enrollment
+  class Grade
+}
+
+package "Events" as evt {
+  class EnrollmentCreated
+  class GradeUpdated
+}
+
+package "Messaging (Infra)" as msg {
+  class MessagePublisher
+  class MessageSubscriber
+}
+
+' --- Relations (ngắn gọn) ---
+ui.StudentController --> svc_student.StudentService
+ui.CourseController  --> svc_course.CourseService
+ui.GradeController   --> svc_grade.GradeService
+
+svc_student.StudentService ..> repo.StudentRepository
+svc_course.CourseService  ..> repo.CourseRepository
+svc_course.CourseService  ..> repo.EnrollmentRepository
+svc_grade.GradeService    ..> repo.GradeRepository
+
+svc_course.CourseService  ..> evt.EnrollmentCreated
+svc_grade.GradeService    ..> evt.GradeUpdated
+
+svc ..> msg.MessagePublisher : publish()
+msg.MessageSubscriber ..> svc_notif.NotificationService : onMessage()
+
+' Domain usage (chính)
+svc_student.StudentService ..> dom.Student
+svc_course.CourseService   ..> dom.Course
+svc_grade.GradeService     ..> dom.Grade
+@enduml
